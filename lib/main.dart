@@ -9,57 +9,67 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        primarySwatch: Colors.purple,
+        primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(),
+      home: HomePage(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
+class HomePage extends StatefulWidget {
+  HomePage({Key key}) : super(key: key);
+
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _HomePageState createState() => _HomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  static const platform = const MethodChannel('demo.jope/info');
-
-  String _message = "No messages yet...";
-
-  @override
-  void initState() {
-    _getMessage().then((String message) {
-      setState(() {
-        _message = message;
-      });
-    });
-    super.initState();
-  }
+class _HomePageState extends State<HomePage> {
+  String _batteryPercentage = 'Battery precentage';
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Native Channels Test'),
+        title: Text('Platform specific'),
       ),
-      body: ListView(
-        children: <Widget>[
-          ListTile(
-            title: Text(_message),
+      body: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+        MaterialButton(
+          onPressed: _getBatteryInformation,
+          color: Colors.blueAccent,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              'Click me',
+              style: TextStyle(color: Colors.white, fontSize: 35.0),
+            ),
           ),
-        ],
-      ),
+        ),
+        Container(
+          height: 16.0,
+        ),
+        Text(
+          _batteryPercentage,
+          style: TextStyle(
+            fontSize: 20.0,
+          ),
+        )
+      ]),
     );
   }
 
-  Future<String> _getMessage() async {
-    String value;
+  static const batteryChannel = const MethodChannel('battery');
+
+  Future<void> _getBatteryInformation() async {
+    String batteryPercentage;
     try {
-      value = await platform.invokeMethod('getMessage');
-    } catch (e) {
-      print(e);
+      var result = await batteryChannel.invokeMethod('getBatteryLevel');
+      batteryPercentage = 'Battery level at $result%';
+    } on PlatformException catch (e) {
+      batteryPercentage = "Failed to get battery level: '${e.message}'.";
     }
 
-    return value;
+    setState(() {
+      _batteryPercentage = batteryPercentage;
+    });
   }
 }
